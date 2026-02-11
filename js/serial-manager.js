@@ -1,179 +1,180 @@
-/**
- * Web Serial API Manager for Cattle Management System
- */
+/* ============================================
+   WEB SERIAL API MANAGER
+   Scanner (Bluetooth RS232) + Scale (USB RS232)
+============================================ */
 
-class SerialManagerClass {
-  constructor() {
-    this.scannerPort = null;
-    this.scalePort = null;
-    this.scannerReader = null;
-    this.scaleReader = null;
-    this.scannerBuffer = '';
-    this.scaleBuffer = '';
-    this.isScannerReading = false;
-    this.isScaleReading = false;
-  }
+const SerialManager = (() => {
+  let scannerPort = null;
+  let scalePort = null;
+  let scannerReader = null;
+  let scaleReader = null;
+  let scannerBuffer = '';
+  let scaleBuffer = '';
+  let isReading = { scanner: false, scale: false };
 
-  isSupported() {
+  // --- Check browser support ---
+  function isSupported() {
     return 'serial' in navigator;
   }
 
-  async connectScanner(baudRate = 9600) {
-    if (!this.isSupported()) {
-      Utils.showToast('Web Serial API tidak didukung. Gunakan Chrome/Edge.', 'error');
+  // --- Connect Scanner ---
+  async function connectScanner() {
+    if (!isSupported()) {
+      Utils.showToast('Web Serial API tidak didukung di browser ini. Gunakan Chrome/Edge.', 'error');
       return false;
     }
     try {
-      this.scannerPort = await navigator.serial.requestPort();
-      await this.scannerPort.open({ baudRate, dataBits: 8, stopBits: 1, parity: 'none' });
-      this.updateDot('dotScanner', true);
+      scannerPort = await navigator.serial.requestPort();
+      await scannerPort.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: 'none' });
+      updateDot('dotScanner', true);
       Utils.showToast('Scanner terhubung', 'success');
       DB.addLog('Serial', 'Scanner connected');
-      this.startScannerReader();
+      readScanner();
       return true;
-    } catch (error) {
-      console.error('Scanner connection error:', error);
-      Utils.showToast('Gagal menghubungkan scanner: ' + error.message, 'error');
+    } catch (err) {
+      console.error('Scanner connect error:', err);
+      Utils.showToast('Gagal menghubungkan scanner: ' + err.message, 'error');
       return false;
     }
   }
 
-  async connectScale(baudRate = 9600) {
-    if (!this.isSupported()) {
-      Utils.showToast('Web Serial API tidak didukung. Gunakan Chrome/Edge.', 'error');
+  // --- Connect Scale ---
+  async function connectScale() {
+    if (!isSupported()) {
+      Utils.showToast('Web Serial API tidak didukung di browser ini. Gunakan Chrome/Edge.', 'error');
       return false;
     }
     try {
-      this.scalePort = await navigator.serial.requestPort();
-      await this.scalePort.open({ baudRate, dataBits: 8, stopBits: 1, parity: 'none' });
-      this.updateDot('dotScale', true);
+      scalePort = await navigator.serial.requestPort();
+      await scalePort.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: 'none' });
+      updateDot('dotScale', true);
       Utils.showToast('Timbangan terhubung', 'success');
       DB.addLog('Serial', 'Scale connected');
-      this.startScaleReader();
+      readScale();
       return true;
-    } catch (error) {
-      console.error('Scale connection error:', error);
-      Utils.showToast('Gagal menghubungkan timbangan: ' + error.message, 'error');
+    } catch (err) {
+      console.error('Scale connect error:', err);
+      Utils.showToast('Gagal menghubungkan timbangan: ' + err.message, 'error');
       return false;
     }
   }
 
-  async startScannerReader() {
-    if (!this.scannerPort?.readable) return;
-    this.isScannerReading = true;
-    const textDecoder = new TextDecoderStream();
-    this.scannerPort.readable.pipeTo(textDecoder.writable);
-    this.scannerReader = textDecoder.readable.getReader();
-
+  // --- Disconnect ---
+  async function disconnectScanner() {
     try {
-      while (this.isScannerReading) {
-        const { value, done } = await this.scannerReader.read();
-        if (done) break;
-        if (value) this.processScannerData(value);
-      }
-    } catch (error) {
-      if (this.isScannerReading) console.error('Scanner read error:', error);
-    } finally {
-      this.scannerReader.releaseLock();
-    }
-  }
-
-  async startScaleReader() {
-    if (!this.scalePort?.readable) return;
-    this.isScaleReading = true;
-    const textDecoder = new TextDecoderStream();
-    this.scalePort.readable.pipeTo(textDecoder.writable);
-    this.scaleReader = textDecoder.readable.getReader();
-
-    try {
-      while (this.isScaleReading) {
-        const { value, done } = await this.scaleReader.read();
-        if (done) break;
-        if (value) this.processScaleData(value);
-      }
-    } catch (error) {
-      if (this.isScaleReading) console.error('Scale read error:', error);
-    } finally {
-      this.scaleReader.releaseLock();
-    }
-  }
-
-  processScannerData(data) {
-    this.scannerBuffer += data;
-    console.log('Raw scanner data:', data); // debug
-
-    const lines = this.scannerBuffer.split(/[\r\n]+/);
-    for (let i = 0; i < lines.length - 1; i++) {
-      const line = lines[i].trim();
-      if (line.length > 0) {
-        const rfid = this.extractRfid(line);
-        if (rfid) {
-          window.dispatchEvent(new CustomEvent('scanner-data', { detail: { rfid } }));
-        }
-      }
-    }
-    this.scannerBuffer = lines[lines.length - 1];
-  }
-
-  extractRfid(data) {
-    const cleaned = data.replace(/[^\d]/g, '');
-    const match = cleaned.match(/\d{10,20}/); // fleksibel: 10–20 digit
-    return match ? match[0] : null;
-  }
-
-  processScaleData(data) {
-    this.scaleBuffer += data;
-    const lines = this.scaleBuffer.split(/[\r\n]+/);
-    for (let i = 0; i < lines.length - 1; i++) {
-      const line = lines[i].trim();
-      if (line.length > 0) {
-        const weight = this.extractWeight(line);
-        if (weight !== null) {
-          window.dispatchEvent(new CustomEvent('scale-data', { detail: { weight } }));
-        }
-      }
-    }
-    this.scaleBuffer = lines[lines.length - 1];
-  }
-
-  extractWeight(data) {
-    const match = data.match(/-?\d+\.?\d*/);
-    if (match) {
-      const weight = parseFloat(match[0]);
-      if (weight >= 0 && weight <= 2000) return weight;
-    }
-    return null;
-  }
-
-  async disconnectScanner() {
-    this.isScannerReading = false;
-    try {
-      if (this.scannerReader) { await this.scannerReader.cancel(); this.scannerReader = null; }
-      if (this.scannerPort) { await this.scannerPort.close(); this.scannerPort = null; }
-      this.scannerBuffer = '';
-      this.updateDot('dotScanner', false);
+      isReading.scanner = false;
+      if (scannerReader) { await scannerReader.cancel(); scannerReader = null; }
+      if (scannerPort) { await scannerPort.close(); scannerPort = null; }
+      updateDot('dotScanner', false);
       Utils.showToast('Scanner terputus', 'info');
       DB.addLog('Serial', 'Scanner disconnected');
-    } catch (error) {
-      console.error('Scanner disconnect error:', error);
+    } catch (err) {
+      console.error('Scanner disconnect error:', err);
     }
   }
 
-  async disconnectScale() {
-    this.isScaleReading = false;
+  async function disconnectScale() {
     try {
-      if (this.scaleReader) { await this.scaleReader.cancel(); this.scaleReader = null; }
-      if (this.scalePort) { await this.scalePort.close(); this.scalePort = null; }
-      this.scaleBuffer = '';
-      this.updateDot('dotScale', false);
+      isReading.scale = false;
+      if (scaleReader) { await scaleReader.cancel(); scaleReader = null; }
+      if (scalePort) { await scalePort.close(); scalePort = null; }
+      updateDot('dotScale', false);
       Utils.showToast('Timbangan terputus', 'info');
       DB.addLog('Serial', 'Scale disconnected');
-    } catch (error) {
-      console.error('Scale disconnect error:', error);
+    } catch (err) {
+      console.error('Scale disconnect error:', err);
     }
   }
 
-  updateDot(dotId, connected) {
+  // --- Read Scanner Data ---
+  async function readScanner() {
+    if (!scannerPort || !scannerPort.readable) return;
+    isReading.scanner = true;
+    try {
+      while (scannerPort.readable && isReading.scanner) {
+        scannerReader = scannerPort.readable.getReader();
+        try {
+          while (isReading.scanner) {
+            const { value, done } = await scannerReader.read();
+            if (done) break;
+            const text = new TextDecoder().decode(value);
+            console.log('Raw scanner data:', text); // debug
+
+            scannerBuffer += text;
+
+            // Bersihkan spasi dan karakter non-digit
+            const cleanedBuffer = scannerBuffer.replace(/\s+/g, '').replace(/[^\d]/g, '');
+
+            // Cari angka 10–20 digit
+            const match = cleanedBuffer.match(/\d{10,20}/);
+            if (match) {
+              const rfid = match[0];
+              scannerBuffer = ''; // reset buffer setelah dapat RFID
+              window.dispatchEvent(new CustomEvent('scanner-data', { detail: { rfid } }));
+              console.log('RFID detected:', rfid);
+            }
+
+            if (scannerBuffer.length > 200) {
+              scannerBuffer = scannerBuffer.slice(-50);
+            }
+          }
+        } finally {
+          scannerReader.releaseLock();
+        }
+      }
+    } catch (err) {
+      if (isReading.scanner) {
+        console.error('Scanner read error:', err);
+        updateDot('dotScanner', false);
+        Utils.showToast('Scanner terputus secara tidak terduga', 'error');
+      }
+    }
+  }
+
+  // --- Read Scale Data ---
+  async function readScale() {
+    if (!scalePort || !scalePort.readable) return;
+    isReading.scale = true;
+    try {
+      while (scalePort.readable && isReading.scale) {
+        scaleReader = scalePort.readable.getReader();
+        try {
+          while (isReading.scale) {
+            const { value, done } = await scaleReader.read();
+            if (done) break;
+            const text = new TextDecoder().decode(value);
+            scaleBuffer += text;
+
+            const lines = scaleBuffer.split(/[\r\n]+/);
+            for (const line of lines) {
+              const weightMatch = line.match(/([+-]?\s*\d+\.?\d*)\s*(?:kg|KG|Kg)?/i);
+              if (weightMatch) {
+                const weight = parseFloat(weightMatch[1].replace(/\s/g, ''));
+                if (!isNaN(weight) && weight >= 0 && weight < 9999) {
+                  window.dispatchEvent(new CustomEvent('scale-data', { detail: { weight } }));
+                }
+              }
+            }
+            scaleBuffer = lines[lines.length - 1] || '';
+            if (scaleBuffer.length > 200) {
+              scaleBuffer = scaleBuffer.slice(-50);
+            }
+          }
+        } finally {
+          scaleReader.releaseLock();
+        }
+      }
+    } catch (err) {
+      if (isReading.scale) {
+        console.error('Scale read error:', err);
+        updateDot('dotScale', false);
+        Utils.showToast('Timbangan terputus secara tidak terduga', 'error');
+      }
+    }
+  }
+
+  // --- UI status dot ---
+  function updateDot(dotId, connected) {
     const dot = document.getElementById(dotId);
     if (dot) {
       if (connected) dot.classList.add('connected');
@@ -181,20 +182,24 @@ class SerialManagerClass {
     }
   }
 
-  toggleScanner() {
-    if (this.scannerPort) this.disconnectScanner();
-    else this.connectScanner();
+  // --- Toggle functions ---
+  function toggleScanner() {
+    if (scannerPort) disconnectScanner();
+    else connectScanner();
   }
 
-  toggleScale() {
-    if (this.scalePort) this.disconnectScale();
-    else this.connectScale();
+  function toggleScale() {
+    if (scalePort) disconnectScale();
+    else connectScale();
   }
 
-  isScannerConnected() { return !!this.scannerPort; }
-  isScaleConnected() { return !!this.scalePort; }
-}
+  function isScannerConnected() { return !!scannerPort; }
+  function isScaleConnected() { return !!scalePort; }
 
-// Buat instance dan alias global agar kompatibel dengan kode lama
-const serialManager = new SerialManagerClass();
-window.SerialManager = serialManager;
+  return {
+    isSupported, connectScanner, connectScale,
+    disconnectScanner, disconnectScale,
+    toggleScanner, toggleScale,
+    isScannerConnected, isScaleConnected
+  };
+})();
