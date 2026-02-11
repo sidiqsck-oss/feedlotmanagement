@@ -17,7 +17,7 @@ const SerialManager = (() => {
     }
 
     // --- Connect Scanner ---
-    async function connectScanner() {
+    async function connectScanner(baudRate = 9600) {
         if (!isSupported()) {
             Utils.showToast('Web Serial API tidak didukung di browser ini. Gunakan Chrome/Edge.', 'error');
             return false;
@@ -38,7 +38,7 @@ const SerialManager = (() => {
     }
 
     // --- Connect Scale ---
-    async function connectScale() {
+    async function connectScale(baudRate = 9600) {
         if (!isSupported()) {
             Utils.showToast('Web Serial API tidak didukung di browser ini. Gunakan Chrome/Edge.', 'error');
             return false;
@@ -99,7 +99,7 @@ const SerialManager = (() => {
                         const text = new TextDecoder().decode(value);
                         scannerBuffer += text;
                         // Look for 15-digit RFID number (with optional \r\n terminators)
-                        const match = scannerBuffer.match(/(\d{15})/);
+                        const match = scannerBuffer.match(/(\d{10,15})/);
                         if (match) {
                             const rfid = match[1];
                             scannerBuffer = '';
