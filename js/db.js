@@ -3,7 +3,7 @@
    ============================================ */
 const DB = (() => {
     const DB_NAME = 'CattleManagementDB';
-    const DB_VERSION = 1;
+    const DB_VERSION = 2;
     let db = null;
 
     function open() {
