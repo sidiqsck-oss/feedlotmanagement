@@ -1,0 +1,8 @@
+{
+    "name": "feedlot-management",
+    "version": "1.0.0",
+    "description": "Cattle Management PWA — Feedlot Operasional",
+    "scripts": {
+        "start": "npx -y http-server . -c-1 -p 3000 -o"
+    }
+}

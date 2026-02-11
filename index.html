@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Feedlot Management — Cattle Induction, Reweight & Sales PWA">
+    <meta name="theme-color" content="#0f3460">
+    <title>Feedlot Management</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- ============================================
+     LOGIN PAGE
+     ============================================ -->
+    <div id="pageLogin" class="login-page">
+        <div class="login-card">
+            <h1>🐄 Feedlot Management</h1>
+            <p class="login-subtitle">Cattle Management System</p>
+            <div id="loginError" class="login-error"></div>
+            <div class="form-group">
+                <label for="loginUsername">Username</label>
+                <input type="text" id="loginUsername" class="form-control" placeholder="Username"
+                    autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" class="form-control" placeholder="Password"
+                    autocomplete="current-password">
+            </div>
+            <button id="btnLogin" class="btn btn-primary w-full" style="margin-top:0.5rem">Login</button>
+        </div>
+    </div>
+
+    <!-- ============================================
+     MAIN APP (shown after login)
+     ============================================ -->
+    <div id="pageMain" class="hidden">
+
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-left">
+                <span class="header-title">🐄 Feedlot Management</span>
+                <div class="serial-status" title="Scanner Status">
+                    <span class="serial-dot" id="dotScanner"></span>
+                    <span>Scanner</span>
+                </div>
+                <div class="serial-status" title="Scale Status">
+                    <span class="serial-dot" id="dotScale"></span>
+                    <span>Scale</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="header-user" id="headerUser"></span>
+                <button class="btn-logout" id="btnLogout">Logout</button>
+            </div>
+        </header>
+
+        <!-- WEIGHT DISPLAY — fixed top right -->
+        <div class="weight-display" id="weightDisplay">
+            <div class="weight-display-label">Timbangan</div>
+            <div>
+                <span class="weight-display-value" id="weightValue">0.0</span>
+                <span class="weight-display-unit">Kg</span>
+            </div>
+        </div>
+
+        <!-- NAVIGATION -->
+        <nav class="nav-menu" id="navMenu">
+            <button class="nav-tab active" data-page="pageInduksi" id="tabInduksi">📋 Induksi</button>
+            <button class="nav-tab" data-page="pageReweight" id="tabReweight">⚖️ Reweight</button>
+            <button class="nav-tab" data-page="pagePenjualan" id="tabPenjualan">💰 Penjualan</button>
+            <button class="nav-tab" data-page="pageSettings" id="tabSettings">⚙️ Pengaturan</button>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+
+            <!-- ============================================
+             INDUKSI PAGE
+             ============================================ -->
+            <div id="pageInduksi" class="page-section active">
+                <h2>📋 Input Data Induksi</h2>
+
+                <div class="form-card">
+                    <div class="form-grid">
+                        <!-- Shipment -->
+                        <div class="form-group">
+                            <label>Shipment</label>
+                            <div class="input-with-add">
+                                <select id="indShipment" class="form-control">
+                                    <option value="">-- Pilih --</option>
+                                </select>
+                                <button class="btn-add-master" data-type="shipment" title="Tambah Shipment">+</button>
+                            </div>
+                        </div>
+                        <!-- RFID -->
+                        <div class="form-group">
+                            <label>RFID</label>
+                            <input type="text" id="indRfid" class="form-control" placeholder="Scan dari RS232"
+                                maxlength="15">
+                        </div>
+                        <!-- Tanggal Induksi -->
+                        <div class="form-group">
+                            <label>Tanggal Induksi</label>
+                            <input type="date" id="indTanggal" class="form-control">
+                        </div>
+                        <!-- Eartag -->
+                        <div class="form-group">
+                            <label>Eartag</label>
+                            <input type="text" id="indEartag" class="form-control" placeholder="Input manual">
+                        </div>
+                        <!-- Berat Induksi -->
+                        <div class="form-group">
+                            <label>Berat Induksi (Kg)</label>
+                            <input type="number" id="indBerat" class="form-control" placeholder="Dari timbangan"
+                                step="0.1">
+                        </div>
+                        <!-- PEN -->
+                        <div class="form-group">
+                            <label>PEN</label>
+                            <input type="text" id="indPen" class="form-control" placeholder="Input manual">
+                        </div>
+                        <!-- Gigi -->
+                        <div class="form-group">
+                            <label>Gigi</label>
+                            <input type="text" id="indGigi" class="form-control" placeholder="Input manual">
+                        </div>
+                        <!-- Frame -->
+                        <div class="form-group">
+                            <label>Frame</label>
+                            <div class="input-with-add">
+                                <select id="indFrame" class="form-control">
+                                    <option value="">-- Pilih --</option>
+                                </select>
+                                <button class="btn-add-master" data-type="frame" title="Tambah Frame">+</button>
+                            </div>
+                        </div>
+                        <!-- Kode Property -->
+                        <div class="form-group">
+                            <label>Kode Property</label>
+                            <div class="input-with-add">
+                                <select id="indKodeProperty" class="form-control">
+                                    <option value="">-- Pilih --</option>
+                                </select>
+                                <button class="btn-add-master" data-type="kodeProperty"
+                                    title="Tambah Kode Property">+</button>
+                            </div>
+                        </div>
+                        <!-- Vitamin -->
+                        <div class="form-group">
+                            <label>Vitamin</label>
+                            <input type="number" id="indVitamin" class="form-control" value="1" step="1">
+                        </div>
+                        <!-- Jenis Sapi -->
+                        <div class="form-group">
+                            <label>Jenis Sapi</label>
+                            <div class="input-with-add">
+                                <select id="indJenisSapi" class="form-control">
+                                    <option value="">-- Pilih --</option>
+                                </select>
+                                <button class="btn-add-master" data-type="jenisSapi"
+                                    title="Tambah Jenis Sapi">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button id="btnInduksiInput" class="btn btn-primary">💾 Input Data</button>
+                        <button id="btnInduksiClear" class="btn btn-outline">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3>📊 Data Induksi</h3>
+                        <div class="table-actions">
+                            <button id="btnIndDeleteSelected" class="btn btn-danger btn-sm">🗑️ Hapus Terpilih</button>
+                            <button id="btnIndExportExcel" class="btn btn-success btn-sm">📥 Export Excel</button>
+                            <button id="btnIndImportExcel" class="btn btn-warning btn-sm">📤 Import Excel</button>
+                            <button id="btnIndDownloadTemplate" class="btn btn-outline btn-sm">📄 Download
+                                Template</button>
+                            <input type="file" id="indImportFile" accept=".xlsx,.xls" class="hidden">
+                        </div>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th class="checkbox-col"><input type="checkbox" id="indCheckAll"></th>
+                                    <th>No</th>
+                                    <th>Shipment</th>
+                                    <th>RFID</th>
+                                    <th>Tanggal</th>
+                                    <th>Eartag</th>
+                                    <th>Berat (Kg)</th>
+                                    <th>PEN</th>
+                                    <th>Gigi</th>
+                                    <th>Frame</th>
+                                    <th>Kode Property</th>
+                                    <th>Vitamin</th>
+                                    <th>Jenis Sapi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="indTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="summary-section">
+                    <div class="summary-header">
+                        <h3>📈 Summary per PEN</h3>
+                        <div class="summary-filter">
+                            <label>Filter Shipment:</label>
+                            <select id="indSummaryFilter" class="form-control" style="min-width:180px">
+                                <option value="">Semua Shipment</option>
+                            </select>
+                            <button id="btnIndSummaryExport" class="btn btn-success btn-sm">📥 Export</button>
+                        </div>
+                    </div>
+                    <div class="table-scroll" style="max-height:300px">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>PEN</th>
+                                    <th>Jumlah Sapi</th>
+                                    <th>Total Berat (Kg)</th>
+                                    <th>Avg Berat (Kg)</th>
+                                    <th>Jenis Sapi</th>
+                                    <th>Frame</th>
+                                </tr>
+                            </thead>
+                            <tbody id="indSummaryBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================
+             REWEIGHT PAGE
+             ============================================ -->
+            <div id="pageReweight" class="page-section">
+                <h2>⚖️ Input Data Reweight</h2>
+
+                <div class="form-card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>RFID</label>
+                            <input type="text" id="rewRfid" class="form-control" placeholder="Scan dari RS232"
+                                maxlength="15">
+                        </div>
+                        <div class="form-group">
+                            <label>Tanggal Induksi</label>
+                            <input type="date" id="rewTglInduksi" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Tanggal Reweight</label>
+                            <input type="date" id="rewTanggal" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Eartag</label>
+                            <input type="text" id="rewEartag" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Shipment</label>
+                            <input type="text" id="rewShipment" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Berat Reweight (Kg)</label>
+                            <input type="number" id="rewBerat" class="form-control" placeholder="Dari timbangan"
+                                step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>PEN Induksi</label>
+                            <input type="text" id="rewPenInduksi" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>PEN Awal Reweight</label>
+                            <input type="text" id="rewPenAwal" class="form-control" placeholder="Input manual">
+                        </div>
+                        <div class="form-group">
+                            <label>PEN Akhir Reweight</label>
+                            <input type="text" id="rewPenAkhir" class="form-control" placeholder="Input manual">
+                        </div>
+                        <div class="form-group">
+                            <label>DOF (hari)</label>
+                            <input type="number" id="rewDof" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>ADG (Kg/hari)</label>
+                            <input type="text" id="rewAdg" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Frame</label>
+                            <input type="text" id="rewFrame" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Vitamin</label>
+                            <input type="number" id="rewVitamin" class="form-control" value="1" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Jenis Sapi</label>
+                            <input type="text" id="rewJenisSapi" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button id="btnReweightInput" class="btn btn-primary">💾 Input Data</button>
+                        <button id="btnReweightClear" class="btn btn-outline">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3>📊 Data Reweight</h3>
+                        <div class="table-actions">
+                            <button id="btnRewDeleteSelected" class="btn btn-danger btn-sm">🗑️ Hapus Terpilih</button>
+                            <button id="btnRewExportExcel" class="btn btn-success btn-sm">📥 Export Excel</button>
+                            <button id="btnRewImportExcel" class="btn btn-warning btn-sm">📤 Import Excel</button>
+                            <button id="btnRewDownloadTemplate" class="btn btn-outline btn-sm">📄 Download
+                                Template</button>
+                            <input type="file" id="rewImportFile" accept=".xlsx,.xls" class="hidden">
+                        </div>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th class="checkbox-col"><input type="checkbox" id="rewCheckAll"></th>
+                                    <th>No</th>
+                                    <th>RFID</th>
+                                    <th>Tgl Induksi</th>
+                                    <th>Tgl Reweight</th>
+                                    <th>Eartag</th>
+                                    <th>Shipment</th>
+                                    <th>Berat Reweight</th>
+                                    <th>PEN Induksi</th>
+                                    <th>PEN Awal</th>
+                                    <th>PEN Akhir</th>
+                                    <th>DOF</th>
+                                    <th>ADG</th>
+                                    <th>Frame</th>
+                                    <th>Vitamin</th>
+                                    <th>Jenis Sapi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rewTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Dual Summary -->
+                <div class="summary-section">
+                    <div class="summary-header">
+                        <h3>📈 Summary Reweight</h3>
+                        <div class="summary-filter">
+                            <label>Filter Shipment:</label>
+                            <select id="rewSummaryFilter" class="form-control" style="min-width:180px">
+                                <option value="">Semua Shipment</option>
+                            </select>
+                            <button id="btnRewSummaryExport" class="btn btn-success btn-sm">📥 Export</button>
+                        </div>
+                    </div>
+                    <!-- Tab Group for PEN Awal / PEN Akhir -->
+                    <div class="tab-group">
+                        <button class="tab-btn active" data-tab="rewSummaryAwal">PEN Awal Reweight</button>
+                        <button class="tab-btn" data-tab="rewSummaryAkhir">PEN Akhir Reweight</button>
+                    </div>
+                    <!-- PEN Awal Table -->
+                    <div id="rewSummaryAwal" class="tab-content">
+                        <div class="table-scroll" style="max-height:300px">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>PEN Awal</th>
+                                        <th>Jumlah Sapi</th>
+                                        <th>Total Berat</th>
+                                        <th>Avg Berat</th>
+                                        <th>Avg ADG</th>
+                                        <th>Jenis Sapi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rewSummaryAwalBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- PEN Akhir Table -->
+                    <div id="rewSummaryAkhir" class="tab-content hidden">
+                        <div class="table-scroll" style="max-height:300px">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>PEN Akhir</th>
+                                        <th>Jumlah Sapi</th>
+                                        <th>Total Berat</th>
+                                        <th>Avg Berat</th>
+                                        <th>Avg ADG</th>
+                                        <th>Jenis Sapi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rewSummaryAkhirBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================
+             PENJUALAN PAGE
+             ============================================ -->
+            <div id="pagePenjualan" class="page-section">
+                <h2>💰 Input Data Penjualan</h2>
+
+                <div class="form-card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Pembeli</label>
+                            <div class="input-with-add">
+                                <select id="penjPembeli" class="form-control">
+                                    <option value="">-- Pilih --</option>
+                                </select>
+                                <button class="btn-add-master" data-type="pembeli" title="Tambah Pembeli">+</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>RFID</label>
+                            <input type="text" id="penjRfid" class="form-control" placeholder="Scan dari RS232"
+                                maxlength="15">
+                        </div>
+                        <div class="form-group">
+                            <label>Tanggal Jual</label>
+                            <input type="date" id="penjTanggal" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Eartag</label>
+                            <input type="text" id="penjEartag" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Shipment</label>
+                            <input type="text" id="penjShipment" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Berat Jual (Kg)</label>
+                            <input type="number" id="penjBerat" class="form-control" placeholder="Dari timbangan"
+                                step="0.1">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button id="btnPenjualanInput" class="btn btn-primary">➕ Tambah ke Daftar</button>
+                        <button id="btnPenjualanClear" class="btn btn-outline">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <!-- Cart / Sale Items -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3>🧾 Daftar Penjualan</h3>
+                        <div class="table-actions">
+                            <button id="btnPenjPrintSettings" class="btn btn-outline btn-sm">⚙️ Print Settings</button>
+                            <button id="btnPenjExportPdf" class="btn btn-primary btn-sm">📄 Export PDF Invoice</button>
+                            <button id="btnPenjExportStaffExcel" class="btn btn-success btn-sm">📥 Export Staff
+                                Excel</button>
+                        </div>
+                    </div>
+                    <div class="table-scroll" style="max-height:350px">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>RFID</th>
+                                    <th>Eartag</th>
+                                    <th>Shipment</th>
+                                    <th>Berat Jual (Kg)</th>
+                                    <th>Tanggal Jual</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="penjTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Riwayat Penjualan (History from IndexedDB) -->
+                <div class="table-section">
+                    <div class="table-header">
+                        <h3>📜 Riwayat Penjualan</h3>
+                        <div class="table-actions">
+                            <select id="penjHistoryFilter" class="form-control" style="min-width:180px">
+                                <option value="">Semua Pembeli</option>
+                            </select>
+                            <button id="btnPenjHistoryExportPdf" class="btn btn-primary btn-sm">📄 Export PDF</button>
+                            <button id="btnPenjHistoryExportStaff" class="btn btn-success btn-sm">📥 Export Staff
+                                Excel</button>
+                            <button id="btnPenjHistoryDelete" class="btn btn-danger btn-sm">🗑️ Hapus Terpilih</button>
+                        </div>
+                    </div>
+                    <div class="table-scroll" style="max-height:400px">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th class="checkbox-col"><input type="checkbox" id="penjHistCheckAll"></th>
+                                    <th>No</th>
+                                    <th>RFID</th>
+                                    <th>Eartag</th>
+                                    <th>Shipment</th>
+                                    <th>Pembeli</th>
+                                    <th>Berat Jual (Kg)</th>
+                                    <th>Tanggal Jual</th>
+                                </tr>
+                            </thead>
+                            <tbody id="penjHistoryBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================
+             SETTINGS PAGE
+             ============================================ -->
+            <div id="pageSettings" class="page-section">
+                <h2>⚙️ Pengaturan</h2>
+
+                <div class="settings-grid">
+                    <!-- Serial Connection -->
+                    <div class="settings-card">
+                        <h3>🔌 Koneksi Serial (RS232)</h3>
+                        <div class="settings-item">
+                            <span class="settings-item-label">Scanner Bluetooth RS232</span>
+                            <button id="btnConnectScanner" class="btn btn-primary btn-sm">Connect</button>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-item-label">Timbangan USB RS232</span>
+                            <button id="btnConnectScale" class="btn btn-primary btn-sm">Connect</button>
+                        </div>
+                    </div>
+
+                    <!-- Backup / Migration -->
+                    <div class="settings-card">
+                        <h3>💾 Backup & Migrasi</h3>
+                        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">
+                            Export/Import seluruh data untuk pindah komputer
+                        </p>
+                        <div class="settings-item">
+                            <span class="settings-item-label">Export Semua Data (JSON)</span>
+                            <button id="btnBackupExport" class="btn btn-success btn-sm">📥 Export</button>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-item-label">Import Data (JSON)</span>
+                            <button id="btnBackupImport" class="btn btn-warning btn-sm">📤 Import</button>
+                        </div>
+                        <input type="file" id="backupImportFile" accept=".json" class="hidden">
+                    </div>
+
+                    <!-- Cloud Sync -->
+                    <div class="settings-card">
+                        <h3>☁️ Sinkronisasi Cloud (Supabase)</h3>
+                        <div class="settings-item">
+                            <span class="settings-item-label">Status</span>
+                            <span class="settings-item-value" id="syncStatus">Tidak dikonfigurasi</span>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-item-label">Terakhir Sync</span>
+                            <span class="settings-item-value" id="syncLastTime">-</span>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-item-label">Upload ke Server</span>
+                            <button id="btnSyncUpload" class="btn btn-primary btn-sm">⬆️ Upload</button>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-item-label">Download dari Server</span>
+                            <button id="btnSyncDownload" class="btn btn-primary btn-sm">⬇️ Download</button>
+                        </div>
+                        <div class="settings-item">
+                            <span class="settings-item-label">Konfigurasi Supabase</span>
+                            <button id="btnSyncConfig" class="btn btn-outline btn-sm">⚙️ Setup</button>
+                        </div>
+                    </div>
+
+                    <!-- User Management -->
+                    <div class="settings-card">
+                        <h3>👥 Manajemen User</h3>
+                        <div class="settings-item">
+                            <span class="settings-item-label">Kelola pengguna dan hak akses</span>
+                            <button id="btnManageUsers" class="btn btn-primary btn-sm">👥 Kelola</button>
+                        </div>
+                    </div>
+
+                    <!-- LOG -->
+                    <div class="settings-card">
+                        <h3>📋 Log Aktivitas</h3>
+                        <div class="table-scroll" style="max-height:250px">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Waktu</th>
+                                        <th>Aksi</th>
+                                        <th>Detail</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /main-content -->
+    </div><!-- /pageMain -->
+
+    <!-- ============================================
+     MODALS
+     ============================================ -->
+
+    <!-- Add Master Data Modal -->
+    <div class="modal-overlay" id="modalAddMaster">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalAddMasterTitle">Tambah Data</h3>
+                <button class="modal-close" data-close="modalAddMaster">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label id="modalAddMasterLabel">Nama</label>
+                    <input type="text" id="modalAddMasterInput" class="form-control" placeholder="Masukkan data baru">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" data-close="modalAddMaster">Batal</button>
+                <button class="btn btn-primary" id="btnModalAddMasterSave">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Modal -->
+    <div class="modal-overlay" id="modalUserManagement">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>👥 Manajemen User</h3>
+                <button class="modal-close" data-close="modalUserManagement">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Add User Form -->
+                <div class="form-card" style="margin-bottom:1rem">
+                    <h3>Tambah User Baru</h3>
+                    <div class="form-grid" style="grid-template-columns:repeat(3,1fr)">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="newUserUsername" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="newUserPassword" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select id="newUserRole" class="form-control">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top:0.5rem">
+                        <label style="font-size:0.8rem;color:var(--text-secondary)">Akses Menu:</label>
+                        <div style="display:flex;gap:1rem;margin-top:0.3rem">
+                            <label style="font-size:0.85rem;display:flex;align-items:center;gap:0.3rem;cursor:pointer">
+                                <input type="checkbox" id="newUserAccInduksi" checked> Induksi
+                            </label>
+                            <label style="font-size:0.85rem;display:flex;align-items:center;gap:0.3rem;cursor:pointer">
+                                <input type="checkbox" id="newUserAccReweight" checked> Reweight
+                            </label>
+                            <label style="font-size:0.85rem;display:flex;align-items:center;gap:0.3rem;cursor:pointer">
+                                <input type="checkbox" id="newUserAccPenjualan" checked> Penjualan
+                            </label>
+                            <label style="font-size:0.85rem;display:flex;align-items:center;gap:0.3rem;cursor:pointer">
+                                <input type="checkbox" id="newUserAccSettings" checked> Pengaturan
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="btnAddUser" style="margin-top:0.75rem">➕ Tambah
+                        User</button>
+                </div>
+                <!-- User List -->
+                <div class="table-scroll" style="max-height:300px">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Akses</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" data-close="modalUserManagement">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Settings Modal -->
+    <div class="modal-overlay" id="modalPrintSettings">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>🖨️ Pengaturan Print Invoice</h3>
+                <button class="modal-close" data-close="modalPrintSettings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid" style="grid-template-columns:1fr 1fr">
+                    <div class="form-group">
+                        <label>Header Text</label>
+                        <input type="text" id="printHeader" class="form-control" placeholder="Nama Perusahaan">
+                    </div>
+                    <div class="form-group">
+                        <label>Sub Header</label>
+                        <input type="text" id="printSubHeader" class="form-control"
+                            placeholder="Alamat / Info tambahan">
+                    </div>
+                    <div class="form-group">
+                        <label>Logo (upload)</label>
+                        <input type="file" id="printLogoFile" accept="image/*" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Ukuran Kertas</label>
+                        <select id="printPageSize" class="form-control">
+                            <option value="a4">A4</option>
+                            <option value="letter">Letter</option>
+                            <option value="legal">Legal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Orientasi</label>
+                        <select id="printOrientation" class="form-control">
+                            <option value="portrait">Portrait</option>
+                            <option value="landscape">Landscape</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Footer Text</label>
+                        <input type="text" id="printFooter" class="form-control" placeholder="Footer / Catatan">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" data-close="modalPrintSettings">Batal</button>
+                <button class="btn btn-primary" id="btnSavePrintSettings">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase Config Modal -->
+    <div class="modal-overlay" id="modalSupabaseConfig">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>☁️ Konfigurasi Supabase</h3>
+                <button class="modal-close" data-close="modalSupabaseConfig">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Supabase URL</label>
+                    <input type="url" id="configSupabaseUrl" class="form-control"
+                        placeholder="https://xxxx.supabase.co">
+                </div>
+                <div class="form-group">
+                    <label>Supabase Anon Key</label>
+                    <input type="text" id="configSupabaseKey" class="form-control" placeholder="eyJ...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" data-close="modalSupabaseConfig">Batal</button>
+                <button class="btn btn-primary" id="btnSaveSupabaseConfig">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- External Libraries -->
+    <script src="libs/xlsx.full.min.js"></script>
+    <script src="libs/jspdf.umd.min.js"></script>
+    <script src="libs/jspdf.plugin.autotable.umd.min.js"></script>
+
+    <!-- Config (gitignored) -->
+    <script src="config.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/db.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/serial-manager.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/backup.js"></script>
+    <script src="js/supabase-sync.js"></script>
+    <script src="js/induksi.js"></script>
+    <script src="js/reweight.js"></script>
+    <script src="js/penjualan.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>
