@@ -196,3 +196,7 @@ class SerialManager {
 }
 
 const serialManager = new SerialManager();
+
+// Alias agar kompatibel dengan kode lama
+window.SerialManager = serialManager;
+
