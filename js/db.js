@@ -193,18 +193,4 @@ const DB = (() => {
         getMasterByType, addMaster,
         exportAll, importAll, addLog
     };
-   const mysql = require('mysql2/promise');
-
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'password', // ganti sesuai
-  database: 'feedlot',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-
-module.exports = pool;
-
 })();
